@@ -45,6 +45,9 @@ except ImportError as e:
     print(f"⚠️  Ошибка импорта config_pyannote.py: {e}")
     print("⚠️  Диаризация через pyannote.ai недоступна.")
 
+# Добавленный импорт SileroVAD
+from src.audio_processing.vad import SileroVAD
+
 # ============================================================================
 # НАСТРОЙКА ЛОГГЕРА
 # ============================================================================
@@ -1318,7 +1321,7 @@ class AudioProcessorUnified:
             analysis_result['reason'] = f'Исключение: {str(e)}'
             return analysis_result
 
-    def detect_speech_segments(self, file_path: Path, quality: str = 'standard') -> List[Dict]:
+    def _detect_speech_segments_ffmpeg(self, file_path: Path, quality: str = 'standard') -> List[Dict]:
         """Детектирует сегменты речи в аудиофайле"""
         try:
             logger.info(f"Поиск речевых сегментов в: {file_path.name}")
@@ -1387,6 +1390,34 @@ class AudioProcessorUnified:
         except Exception as e:
             logger.error(f"Ошибка при детектировании речи: {e}")
             return []
+
+    def detect_speech_segments(self, file_path: Path, quality: str = 'standard') -> List[Dict]:
+        """Детектирует сегменты речи с помощью Silero VAD.
+        quality не используется (оставлен для совместимости)."""
+        try:
+            import soundfile as sf
+            audio, sr = sf.read(str(file_path))
+            # Приводим к float32 и моно (если стерео)
+            if audio.ndim == 1:
+                audio = audio.astype('float32')
+            else:
+                audio = audio.mean(axis=1).astype('float32')
+            
+            vad = SileroVAD(sample_rate=sr)
+            segments = vad.get_speech_segments(audio, pad_ms=100)
+            
+            result = []
+            for seg in segments:
+                result.append({
+                    'start': seg['start'],
+                    'end': seg['end'],
+                    'duration': seg['end'] - seg['start']
+                })
+            logger.info(f"Silero VAD: найдено {len(result)} речевых сегментов")
+            return result
+        except Exception as e:
+            logger.error(f"Ошибка Silero VAD: {e}, пробую fallback ffmpeg")
+            return self._detect_speech_segments_ffmpeg(file_path, quality)
 
     def _silence_to_speech_segments(self, silence_periods: List[Dict], total_duration: float) -> List[Dict]:
         """Преобразует периоды тишины в периоды речи"""

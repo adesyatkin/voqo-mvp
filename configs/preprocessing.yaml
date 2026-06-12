@@ -1,0 +1,7 @@
+# Параметры предобработки аудио
+normalization:
+  target_rms: 0.1        # Целевой уровень громкости (RMS). 0.1 хорошо для Whisper
+  method: "rms"          # Метод: rms или peak
+noise_reduction:
+  enabled: false         # Пока не включаем, добавим позже
+  reduction_strength: 0.5 # Сила подавления (0.0 - 1.0)
