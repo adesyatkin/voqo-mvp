@@ -22,7 +22,5 @@ python-Levenshtein
 transformers
 tenacity
 nltk
-nvidia-riva-client
 silero-vad
 webrtcvad
-wave
