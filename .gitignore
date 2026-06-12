@@ -1,0 +1,26 @@
+# Виртуальное окружение
+venv/
+
+# Временные файлы и кэш
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+
+# Данные (будут добавляться отдельно при необходимости)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Настройки с секретами (API-ключи)
+.env
+configs/*.local.yaml
+configs/*.local.json
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
