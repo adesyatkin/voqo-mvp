@@ -61,8 +61,8 @@ if not DEEPSEEK_API_KEYS:
 API_KEY = DEEPSEEK_API_KEYS[0]
 
 BASE_URL = "https://integrate.api.nvidia.com/v1"
-MODEL = "deepseek-ai/deepseek-v4-pro"
-TIMEOUT = 180
+MODEL = "deepseek-ai/deepseek-v4-flash"   # заменён на Flash (было v4-pro)
+TIMEOUT = 60   # уменьшен с 180 до 60 секунд
 MAX_RETRIES = 3
 RPM_LIMIT = 60
 MAX_TOKENS = 32000
