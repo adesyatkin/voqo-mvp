@@ -4,7 +4,7 @@ import base64
 from pathlib import Path
 import requests
 
-# Загружаем .env с перезаписью существующих переменных окружения
+# Загружаем .env с перезаписью
 try:
     from dotenv import load_dotenv
     load_dotenv(Path(__file__).parent.parent / ".env", override=True)
@@ -14,7 +14,7 @@ except ImportError:
 NVIDIA_API_KEYS = [k for k in os.environ.get("NVIDIA_API_KEYS", "").split(",") if k]
 DEEPSEEK_KEYS = [k for k in os.environ.get("DEEPSEEK_API_KEYS", "").split(",") if k]
 
-# Проверяем наличие nvidia-riva-client для gRPC моделей
+# Проверка gRPC
 try:
     import grpc
     from riva.client.proto.riva_audio_pb2 import AudioEncoding
@@ -27,7 +27,6 @@ except ImportError:
 SERVER = "grpc.nvcf.nvidia.com:443"
 
 def _transcribe_grpc(audio_path: str, api_key: str, function_id: str, language_code: str = "ru-RU") -> str:
-    """Общая функция для gRPC ASR (Canary, Whisper, Parakeet)."""
     if not GRPC_AVAILABLE:
         raise RuntimeError("nvidia-riva-client не установлен. Выполните: pip install nvidia-riva-client")
     
@@ -153,12 +152,9 @@ class DeepSeekAdapter:
             api_key=self.api_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="deepseek-ai/deepseek-v4-flash",   # <-- Flash
             messages=[{"role": "user", "content": text}],
-            temperature=1,
-            top_p=0.95,
-            max_tokens=200,
-            extra_body={"chat_template_kwargs": {"thinking": False}},
-            stream=False
+            temperature=0.2,
+            max_tokens=200
         )
         return completion.choices[0].message.content.strip()

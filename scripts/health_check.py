@@ -73,7 +73,7 @@ def main():
 
     try:
         deepseek = DeepSeekAdapter()
-        check_llm("DeepSeek V4 Pro", deepseek)   # <-- исправлено на Pro
+        check_llm("DeepSeek V4 Flash", deepseek)   # <-- Flash
     except Exception as e:
         log(f"DeepSeek: INIT FAIL - {e}")
 
