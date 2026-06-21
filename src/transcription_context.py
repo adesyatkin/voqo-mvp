@@ -1,16 +1,10 @@
-import os
-import sys
-import logging
+import os, sys, logging, re
 from datetime import datetime
 from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).parent))
-
 from adapters import WhisperAdapter
 
-# Папка, куда processor.py кладёт контекстные чанки
 INPUT_FOLDER = "context_files"
-# Папка для результатов контекстной транскрипции
 OUTPUT_FOLDER = "transcription_context"
 
 def setup_logging():
@@ -18,14 +12,9 @@ def setup_logging():
     log_dir.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = log_dir / f"transcription_context_{timestamp}.log"
-    logging.basicConfig(
-        level=logging.INFO,
+    logging.basicConfig(level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
+        handlers=[logging.FileHandler(log_file, encoding='utf-8'), logging.StreamHandler(sys.stdout)])
     return logging.getLogger(__name__)
 
 def main():
@@ -46,14 +35,25 @@ def main():
         return
 
     adapter = WhisperAdapter()
+    # Паттерн для контекстных чанков: имя_context_начало-конец.wav (может быть с суффиксом _1, _2)
+    pattern = re.compile(r'_context_(\d{9})-(\d{9})(?:_\d+)?\.wav$')
+
     for wav_path in sorted(wav_files):
+        m = pattern.search(wav_path.name)
+        if not m:
+            logger.warning(f"Пропущен {wav_path.name} – не контекстный чанк")
+            continue
+        start_ms = m.group(1)
+        end_ms = m.group(2)
         logger.info(f"🔄 Обработка {wav_path.name}")
         try:
-            transcript = adapter.transcribe(str(wav_path))
+            transcript = adapter.transcribe(str(wav_path)).strip()
+            # Формат для контекстных файлов: [start-end] - текст (9 цифр)
+            line = f"[{start_ms}-{end_ms}] - {transcript}"
             txt_filename = wav_path.stem + ".txt"
             txt_path = output_dir / txt_filename
             with open(txt_path, "w", encoding="utf-8") as f:
-                f.write(transcript.strip())
+                f.write(line + "\n")
             logger.info(f"   ✅ Сохранён: {txt_path}")
         except Exception as e:
             logger.error(f"   ❌ Ошибка: {e}")

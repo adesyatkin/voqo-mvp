@@ -897,7 +897,7 @@ class AudioProcessorUnified:
         self.base_dir = Path(__file__).parent
         self.input_dir = self.base_dir / "input_files"
         self.chunk_files_dir = self.base_dir / "chunk_files"
-        self.context_files_dir = Path("D:/VOQO/workers/context_files")   # ← изменено: новая папка для контекстных чанков
+        self.context_files_dir = self.base_dir / "context_files"   # изменено: теперь относительный путь
         self.temp_dir = None
 
         # Настройка параметров обработки
@@ -917,7 +917,7 @@ class AudioProcessorUnified:
 
         # Создаем выходные директории
         self.chunk_files_dir.mkdir(exist_ok=True)
-        self.context_files_dir.mkdir(parents=True, exist_ok=True)   # ← изменено
+        self.context_files_dir.mkdir(parents=True, exist_ok=True)
 
         # Инициализация клиентов
         self.pyannote_client = None
@@ -1402,10 +1402,10 @@ class AudioProcessorUnified:
                 audio = audio.astype('float32')
             else:
                 audio = audio.mean(axis=1).astype('float32')
-            
+
             vad = SileroVAD(sample_rate=sr)
             segments = vad.get_speech_segments(audio, pad_ms=100)
-            
+
             result = []
             for seg in segments:
                 result.append({
